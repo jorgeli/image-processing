@@ -1,0 +1,226 @@
+#!/bin/bash
+
+# API Testing Commands
+
+# Save this file and run commands one by one
+
+# Base URL - change this to match your environment
+
+API_URL="http://localhost:5000/api/v1"
+
+# =============================================
+
+# 1. DIRECT IMAGE UPLOAD
+
+# =============================================
+
+# Upload a small image directly (replace with your actual image path)
+
+curl -X POST "$API_URL/images/actions/upload" \
+ -F "file=@test/fixtures/images/monkey.jpg" \
+ -F "description=Test monkey image uploaded via curl"
+
+# Store the UUID from the response for later use
+
+# Example: IMAGE_UUID="69499c78-2c3e-44bf-9d76-a101fa76c1a4"
+
+IMAGE_UUID="YOUR_IMAGE_UUID_HERE"
+
+# =============================================
+
+# 2. POLL FOR IMAGE PROCESSING COMPLETION
+
+# =============================================
+
+# Check image status (repeat until status is "completed")
+
+curl -X GET "$API_URL/images/$IMAGE_UUID"
+
+# =============================================
+
+# 3. GET IMAGE WITH EMBEDDED DATA
+
+# =============================================
+
+# Get the processed image with embedded base64 data
+
+curl -X GET "$API_URL/images/$IMAGE_UUID"
+
+# =============================================
+
+# 4. LIST ALL IMAGES
+
+# =============================================
+
+# Get a list of all images (with pagination)
+
+curl -X GET "$API_URL/images?page=1&limit=10&sort=desc&sortBy=createdAt"
+
+# With search parameter
+
+curl -X GET "$API_URL/images?page=1&limit=10&sort=desc&sortBy=createdAt&search=test"
+
+# =============================================
+
+# 5. CREATE A COLLECTION
+
+# =============================================
+
+# Create a new collection
+
+curl -X POST "$API_URL/collections" \
+ -H "Content-Type: application/json" \
+ -d '{
+"name": "Test Collection",
+"description": "A collection created via curl for testing"
+}'
+
+# Store the collection UUID from the response
+
+# Example: COLLECTION_UUID="a1b2c3d4-e5f6-7890-abcd-1234567890ab"
+
+COLLECTION_UUID="YOUR_COLLECTION_UUID_HERE"
+
+# =============================================
+
+# 6. GET COLLECTION BY ID
+
+# =============================================
+
+# Get the collection details
+
+curl -X GET "$API_URL/collections/$COLLECTION_UUID"
+
+# =============================================
+
+# 7. LIST ALL COLLECTIONS
+
+# =============================================
+
+# Get a list of all collections
+
+curl -X GET "$API_URL/collections?page=1&limit=10&sort=desc&sortBy=createdAt"
+
+# =============================================
+
+# 8. ADD IMAGE TO COLLECTION
+
+# =============================================
+
+# Add the uploaded image to the collection
+
+curl -X POST "$API_URL/collections/$COLLECTION_UUID/relationships/images" \
+ -H "Content-Type: application/json" \
+ -d '{
+"data": [
+{
+"type": "images",
+"uuid": "'"$IMAGE_UUID"'"
+}
+]
+}'
+
+# =============================================
+
+# 9. UPDATE COLLECTION
+
+# =============================================
+
+# Update the collection name and description
+
+curl -X PATCH "$API_URL/collections/$COLLECTION_UUID" \
+ -H "Content-Type: application/json" \
+ -d '{
+"name": "Updated Test Collection",
+"description": "This collection has been updated via curl"
+}'
+
+# =============================================
+
+# 10. GET UPDATED COLLECTION
+
+# =============================================
+
+# Verify the collection was updated
+
+curl -X GET "$API_URL/collections/$COLLECTION_UUID"
+
+# =============================================
+
+# 11. REMOVE IMAGE FROM COLLECTION
+
+# =============================================
+
+# Remove the image from the collection
+
+curl -X DELETE "$API_URL/collections/$COLLECTION_UUID/relationships/images" \
+ -H "Content-Type: application/json" \
+ -d '{
+"data": [
+{
+"type": "images",
+"uuid": "'"$IMAGE_UUID"'"
+}
+]
+}'
+
+# =============================================
+
+# 12. CLEANUP - DELETE RESOURCES
+
+# =============================================
+
+# Delete the image
+
+curl -X DELETE "$API_URL/images/$IMAGE_UUID"
+
+# Verify image is deleted
+
+curl -X GET "$API_URL/images/$IMAGE_UUID"
+
+# Delete the collection
+
+curl -X DELETE "$API_URL/collections/$COLLECTION_UUID"
+
+# Verify collection is deleted
+
+curl -X GET "$API_URL/collections/$COLLECTION_UUID"
+
+# =============================================
+
+# ALTERNATIVE: PRESIGNED URL FLOW
+
+# =============================================
+
+# Get a presigned URL for upload
+
+curl -X GET "$API_URL/images/actions/upload-url?extension=jpg"
+
+# Store the UUID and presignedUrl from the response
+
+# Example:
+
+# PRESIGNED_UUID="69499c78-2c3e-44bf-9d76-a101fa76c1a4"
+
+# PRESIGNED_URL="https://your-minio-url/..."
+
+PRESIGNED_UUID="YOUR_PRESIGNED_UUID_HERE"
+PRESIGNED_URL="YOUR_PRESIGNED_URL_HERE"
+
+# Upload image using the presigned URL (replace with your actual image path)
+
+curl -X PUT "$PRESIGNED_URL" \
+ --upload-file "/path/to/your/image.jpg" \
+ -H "Content-Type: image/jpeg"
+
+# Start processing the uploaded image
+
+curl -X POST "$API_URL/images/actions/process" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "uuid": "'"$PRESIGNED_UUID"'",
+"filename": "test-image.jpg",
+"description": "Test image uploaded via presigned URL"
+}'
+
+# Then continue with polling, etc. as in the direct upload flow

@@ -1,0 +1,44 @@
+{
+    "compilerOptions": {
+      /* Core Compilation Options */
+      "target": "ES6",                          
+      "module": "ESNext",                        
+      "moduleResolution": "Node",                
+      "outDir": "./dist",                        
+      "rootDir": "./",                        
+      "strict": true,                            
+      "resolveJsonModule": true,                 
+      "esModuleInterop": true,                   
+      "skipLibCheck": true,                      
+      "forceConsistentCasingInFileNames": true,  
+      "noImplicitAny": true,                     
+  
+      /* Linting & Code Quality */
+      "strictNullChecks": true,                  
+      "noUnusedLocals": true,                    
+      "noUnusedParameters": true,                
+      "noImplicitReturns": true,                 
+      "noFallthroughCasesInSwitch": true,        
+  
+      /* Node.js Compatibility */
+      "allowSyntheticDefaultImports": true,      
+      "allowJs": false,                          
+      "noEmit": false,                           
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "paths": {
+        "shared-schemas": ["./packages/shared-schemas/src/index.ts"],
+        "api-controllers": ["./api/src/controllers/*"],
+        "api-services": ["./api/src/services/*"],
+        "api-dtos": ["./api/src/dtos/*"],
+        "api-routes": ["./api/src/routes/*"],
+        "api-middleware": ["./api/src/middleware/*"],
+        "api-config": ["./api/src/config/*"],
+        "api-src": ["./api/src/*"],
+        
+      }
+    },
+    "include": ["api/src/**/*", "worker/src/*", "tests/**/*"],
+    "exclude": ["node_modules", "dist",]
+}
+  

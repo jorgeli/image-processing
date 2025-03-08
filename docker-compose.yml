@@ -1,0 +1,258 @@
+services:
+  #  PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #  MinIO (S3-Compatible Storage)
+  minio:
+    image: quay.io/minio/minio
+    env_file:
+      - .env
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - app-network
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #  Zookeeper (Required for Kafka)
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_MAX_SESSION_TIMEOUT=30000
+      - ZOO_AUTOPURGE_PURGE_INTERVAL=1
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+
+  #  Kafka Broker
+  # healthcheck is important becuase node at the begginng checks for topics to exist
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    environment:
+      # Basic settings
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+
+      # Single node settings
+      KAFKA_CFG_BROKER_ID: 1
+      KAFKA_CFG_NUM_PARTITIONS: 4
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_CFG_MIN_INSYNC_REPLICAS: 1
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # Clean start
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka-init:
+    image: bitnami/kafka:latest
+    container_name: kafka-init
+    env_file:
+      - .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      bash -c "
+        echo 'Waiting for Kafka to be ready...' &&
+        kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic ${KAFKA_IMAGE_COMPLETED_TOPIC} --partitions 1 --replication-factor 1 &&
+        kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic ${KAFKA_IMAGE_TASK_TOPIC} --partitions 4 --replication-factor 1 &&
+        echo 'Kafka topics created successfully'"
+    networks:
+      - app-network
+
+  #  MinIO Bucket Initialization
+  minio-init:
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        echo 'Waiting for MinIO to be ready...' &&
+        mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+        mc mb --ignore-existing myminio/${MINIO_BUCKET_UPLOAD} &&
+        mc mb --ignore-existing myminio/${MINIO_BUCKET_COMPLETED} &&
+        echo 'MinIO buckets created successfully'"
+    networks:
+      - app-network
+
+  #  Node.js API (Producer)
+  node-api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: node-api
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ./api/src:/app/api/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./prisma:/app/prisma
+      - ./tests:/app/tests
+      - ./vitest.config.ts:/app/vitest.config.ts
+      - ./vitest.config.js:/app/vitest.config.js
+    environment:
+      - NODE_OPTIONS=--no-warnings
+      - KAFKAJS_NO_PARTITIONER_WARNING=1
+    command: ["sh", "-c", "npm run migrate && npm run dev:api"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      zookeeper:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://node-api:5000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  node-api-test:
+    build:
+      context: .
+      dockerfile: api/Dockerfile.test
+    container_name: node-api-test
+    ports:
+      - "5100:5100"
+    env_file:
+      - .env
+    volumes:
+      - ./api/src:/app/api/src
+      - ./worker/src:/app/worker/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./prisma:/app/prisma
+      - ./tests:/app/tests
+      - ./vitest.config.ts:/app/vitest.config.ts
+      - ./vitest.config.js:/app/vitest.config.js
+    environment:
+      - NODE_OPTIONS=--no-warnings
+      - KAFKAJS_NO_PARTITIONER_WARNING=1
+      - FORCE_COLOR=true
+    tty: true
+    stdin_open: true
+    command: ["sh", "-c", "npm run migrate && npm run test:watch"]
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      zookeeper:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+      node-api:
+        condition: service_healthy
+
+    networks:
+      - app-network
+
+  image-worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./worker/src:/app/worker/src
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+    command: >
+      bash -c "npm run dev:worker"
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+    deploy:
+      replicas: 4 # Run 4 worker instances
+    environment:
+      - KAFKAJS_NO_PARTITIONER_WARNING=1
+
+  # Kafka UI - Web-based management interface
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    depends_on:
+      - kafka
+      - zookeeper
+      - kafka-init
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
