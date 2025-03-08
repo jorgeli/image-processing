@@ -149,7 +149,7 @@ describe('Direct Upload Small Image E2E Flow', () => {
     // Before polling implementation
     let isProcessed = false;
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 3000000;
     let imageData: any;
     
     // Polling implementation

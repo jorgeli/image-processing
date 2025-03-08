@@ -9,21 +9,41 @@ const kafka = new Kafka({
   brokers: [process.env.KAFKA_BROKER ?? 'kafka:9092'],
   retry: {
     initialRetryTime: 1000,
-    retries: 15,
-    maxRetryTime: 30000
+    retries: 5,
+    maxRetryTime: 10000
   },
-  connectionTimeout: 10000
+  connectionTimeout: 5000
 });
 
-const consumerTasks = kafka.consumer({
+const consumer = kafka.consumer({
   groupId: 'image-processor-group',
-  retry: { retries: 10 }
+  sessionTimeout: 30000,
+  heartbeatInterval: 3000,
+  rebalanceTimeout: 30000,
+  retry: {
+    initialRetryTime: 100,
+    retries: 5,
+    maxRetryTime: 3000
+  }
 });
-
 
 const producerCompleted = kafka.producer({
-    allowAutoTopicCreation: false,
-    retry: { retries: 10 }
-  });
+  allowAutoTopicCreation: false,
+  retry: { initialRetryTime: 100, retries: 3 }
+});
 
-export { kafka, consumerTasks, producerCompleted }; 
+export const consumerTasks = kafka.consumer({
+  groupId: 'image-processor-group',
+  sessionTimeout: 30000,
+  heartbeatInterval: 3000,
+  rebalanceTimeout: 30000,
+  retry: {
+    initialRetryTime: 100,
+    retries: 5
+  }
+});
+
+export const topicTasks = process.env.KAFKA_IMAGE_TASK_TOPIC ?? 'undefined';
+export const topicCompleted = process.env.KAFKA_IMAGE_COMPLETED_TOPIC ?? 'undefined';
+
+export { kafka, consumer, producerCompleted }; 

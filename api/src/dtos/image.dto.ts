@@ -28,8 +28,8 @@ export const PresignedUrlResponseDto = z.object({
 });
 
 export const GetImagesQueryDto = z.object({
-  page: z.number().optional().default(1).transform(Number),
-  limit: z.number().optional().default(10).transform(Number),
+  page: z.coerce.number().optional().default(1),
+  limit: z.coerce.number().optional().default(10),
   sort: z.enum(["asc", "desc"]).optional().default("desc"),
   sortBy: z.enum(["createdAt"]).optional().default("createdAt"),
   search: z.string().optional()

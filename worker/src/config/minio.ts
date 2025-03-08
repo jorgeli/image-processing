@@ -12,3 +12,5 @@ export const minioClient = new Client({
   accessKey: process.env.MINIO_ROOT_USER as string,
   secretKey: process.env.MINIO_ROOT_PASSWORD as string
 });
+export const bucketUpload = process.env.MINIO_BUCKET_UPLOAD as string;
+export const bucketCompleted = process.env.MINIO_BUCKET_COMPLETED as string;

@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import sharp from 'sharp';
-import { minioClient } from './config/minio.js';
-import { consumerTasks, producerCompleted } from './config/kafka.js';
+import { minioClient, bucketUpload, bucketCompleted } from './config/minio.js';
+import { consumerTasks, producerCompleted, topicTasks, topicCompleted } from './config/kafka.js';
 import os from 'os';
 import { KafkaCompleteImageDtoType, KafkaProcessImageDtoType } from 'shared-schemas';
 
@@ -78,10 +78,7 @@ async function resizeImage(
 async function main() {
   try {
 
-    const bucketUpload = process.env.MINIO_BUCKET_UPLOAD as string;
-    const bucketCompleted = process.env.MINIO_BUCKET_COMPLETED as string;
-    const topicTasks = process.env.KAFKA_IMAGE_TASK_TOPIC as string;
-    const topicCompleted = process.env.KAFKA_IMAGE_COMPLETED_TOPIC as string;
+
 
     // Connect to the Kafka broker
     await consumerTasks.connect();

@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Image & Collection API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "Get Presigned URL",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images/actions/upload-url?extension=jpg",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images", "actions", "upload-url"],
+              "query": [
+                {
+                  "key": "extension",
+                  "value": "jpg",
+                  "description": "File extension (jpg, jpeg, png, gif, webp, svg, avif, tiff)"
+                }
+              ]
+            },
+            "description": "Get a presigned URL for uploading an image"
+          }
+        },
+        {
+          "name": "Process Image",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images/actions/process",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images", "actions", "process"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uuid\": \"{{imageUuid}}\",\n  \"filename\": \"test-image.jpg\",\n  \"description\": \"Test image uploaded via presigned URL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Process an image that was uploaded via presigned URL"
+          }
+        },
+        {
+          "name": "Upload and Process Image",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images/actions/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images", "actions", "upload"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/image.jpg"
+                },
+                {
+                  "key": "description",
+                  "value": "Test image uploaded directly",
+                  "type": "text"
+                }
+              ]
+            },
+            "description": "Upload and process an image in one step"
+          }
+        },
+        {
+          "name": "Get Image by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images/{{imageUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images", "{{imageUuid}}"]
+            },
+            "description": "Get image details by UUID"
+          }
+        },
+        {
+          "name": "Delete Image",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images/{{imageUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images", "{{imageUuid}}"]
+            },
+            "description": "Delete an image by UUID"
+          }
+        },
+        {
+          "name": "List Images",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/images?page=1&limit=10&sort=desc&sortBy=createdAt&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "images"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "desc"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional search term"
+                }
+              ]
+            },
+            "description": "List all images with pagination"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Collections",
+      "item": [
+        {
+          "name": "List Collections",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections?page=1&limit=10&sort=desc&sortBy=createdAt",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "desc"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                }
+              ]
+            },
+            "description": "List all collections with pagination"
+          }
+        },
+        {
+          "name": "Create Collection",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Collection\",\n  \"description\": \"A collection created for testing\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new collection"
+          }
+        },
+        {
+          "name": "Get Collection by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections/{{collectionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections", "{{collectionUuid}}"]
+            },
+            "description": "Get collection details by UUID"
+          }
+        },
+        {
+          "name": "Update Collection",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections/{{collectionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections", "{{collectionUuid}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Collection Name\",\n  \"description\": \"Updated collection description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a collection's name and/or description"
+          }
+        },
+        {
+          "name": "Delete Collection",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections/{{collectionUuid}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections", "{{collectionUuid}}"]
+            },
+            "description": "Delete a collection by UUID"
+          }
+        },
+        {
+          "name": "Add Images to Collection",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections/{{collectionUuid}}/relationships/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections", "{{collectionUuid}}", "relationships", "images"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\n      \"type\": \"images\",\n      \"uuid\": \"{{imageUuid}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Add images to a collection"
+          }
+        },
+        {
+          "name": "Remove Images from Collection",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/collections/{{collectionUuid}}/relationships/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "collections", "{{collectionUuid}}", "relationships", "images"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\n      \"type\": \"images\",\n      \"uuid\": \"{{imageUuid}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Remove images from a collection"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "imageUuid",
+      "value": "your-image-uuid",
+      "type": "string"
+    },
+    {
+      "key": "collectionUuid",
+      "value": "your-collection-uuid",
+      "type": "string"
+    }
+  ]
+}

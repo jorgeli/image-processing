@@ -17,19 +17,28 @@ const kafka = new Kafka({
 // Create a single producer instance
 const produceTask = kafka.producer({
   allowAutoTopicCreation: false,
-  retry: { retries: 10 }
+  retry: {
+    initialRetryTime: 100,
+    retries: 3
+  }
 });
 
-// Create a single consumer instance
+// Create a single consumer instance with default session timeout
 const consumerCompleted = kafka.consumer({
   groupId: 'image-completed-group',
-  retry: { retries: 10 },
-  sessionTimeout: 45000,
-  heartbeatInterval: 15000
+  retry: {
+    initialRetryTime: 100,
+    retries: 3
+  },
+  // Updated values to match Kafka broker defaults
+  sessionTimeout: 30000,  // Default Kafka value (30 seconds)
+  heartbeatInterval: 3000, // 1/10 of session timeout
+  rebalanceTimeout: 30000,
+  maxWaitTimeInMs: 1000
 });
 
-const topicTasks = process.env.KAFKA_IMAGE_TASK_TOPIC ?? '';
-const topicCompleted = process.env.KAFKA_IMAGE_COMPLETED_TOPIC ?? '';
+const topicTasks = process.env.KAFKA_IMAGE_TASK_TOPIC ?? 'image-tasks';
+const topicCompleted = process.env.KAFKA_IMAGE_COMPLETED_TOPIC ?? 'image-completed';
 
 // Export only the clients and topic names
 export { 
