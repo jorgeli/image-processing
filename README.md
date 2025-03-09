@@ -68,8 +68,8 @@ Ensure you have the following installed:
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/jorgeli/image-processing-service.git
-   cd image-processing-service
+   git clone https://github.com/jorgeli/image-processing.git
+   cd image-processing
    ```
 
 2. Start all services using Docker Compose:
