@@ -256,6 +256,8 @@ npm run test:load
 npm run test:load:report
 ```
 
+Last report can be seen [here](/image-processing/tests/artillery/report.html)
+
 ## 7 Database Migrations
 
 After updating the schema, run:
