@@ -2,7 +2,7 @@
 
 A scalable microservice-based architecture for image processing with direct and presigned URL uploads, asynchronous processing, and a RESTful API.
 
-## Developed by Jorge Alviarez.
+#### Developed by Jorge Alviarez jorge.f.alviarez@gmail.com.
 
 ## 1. Overview
 
