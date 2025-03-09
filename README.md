@@ -72,7 +72,15 @@ Ensure you have the following installed:
    cd image-processing
    ```
 
-2. Start all services using Docker Compose:
+2. Build Docker images before starting services:
+
+   ```sh
+   docker-compose build
+   ```
+
+   This step is highly recommended, especially for first-time setup, as it ensures all images are properly built before the services start. Building can take several minutes on the first run, and attempting to start services before builds complete may cause health checks to fail.
+
+3. Start all services using Docker Compose:
 
    ```sh
    docker-compose up
@@ -84,24 +92,24 @@ Ensure you have the following installed:
    docker-compose up -d && docker-compose logs -f --timestamps
    ```
 
-3. Access the system:
+4. Access the system:
 
    - **API Service:** [http://localhost:5000](http://localhost:5000)
    - **Swagger API Docs:** [http://localhost:5000/api-docs/](http://localhost:5000/api-docs/)
    - **MinIO Console:** [http://localhost:9001](http://localhost:9001) (login with `.env` credentials)
    - **Kafka UI:** [http://localhost:8080/](http://localhost:8080/)
 
-4. To stop the services:
+5. To stop the services:
 
    ```sh
    docker-compose down -v
    ```
 
-5. Scaling with Docker Compose
+6. Scaling with Docker Compose
 
 Even though Docker Compose is not the best tool for production scaling, we can still achieve basic horizontal scaling:
 
-6. Scaling API and Worker Services
+7. Scaling API and Worker Services
 
 To scale services using Docker Compose, use the --scale option:
 

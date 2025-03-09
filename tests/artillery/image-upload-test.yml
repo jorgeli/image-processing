@@ -1,0 +1,32 @@
+config:
+  target: "http://node-api:5000"  # Target your API service
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Warming up"
+    - duration: 120
+      arrivalRate: 20
+      name: "Sustained load"
+  processor: "./tests/artillery/image-functions.js"
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+
+scenarios:
+  - name: "Upload random images"
+    beforeScenario: "getRandomImage"
+    flow:
+      - post:
+          url: "/api/v1/images/actions/upload"
+          headers:
+            Content-Type: multipart/form-data
+          formData:
+            file:
+              fileName: "{{ imageName }}"
+              path: "{{ imagePath }}"
+            description: "Load test image upload - {{ $randomString(10) }}"
+          expect:
+            - statusCode: 200
+            - contentType: "application/json"
+            - hasProperty: "data.uuid"

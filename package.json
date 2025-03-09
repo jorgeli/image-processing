@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "nodemon --watch api/src --watch tests --ext ts,js,json --legacy-watch --exec \"vitest run --reporter=verbose\"",
     "dev:api": "nodemon --watch api/src --ext ts,json --legacy-watch --exec \"tsx\" api/src/server.ts",
-    "migrate": "npx prisma migrate deploy && npx prisma generate"
+    "migrate": "npx prisma migrate deploy && npx prisma generate",
+    "test:load": "artillery run tests/artillery/image-upload-test.yml -o tests/artillery/report.json",
+    "test:load:report": "artillery report tests/artillery/report.json -o tests/artillery/report.html"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +35,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
+    "artillery": "^2.0.21",
     "axios": "^1.8.1",
     "chai": "^5.2.0",
     "cross-env": "^7.0.3",

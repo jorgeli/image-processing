@@ -144,7 +144,13 @@ services:
     environment:
       - NODE_OPTIONS=--no-warnings
       - KAFKAJS_NO_PARTITIONER_WARNING=1
-    command: ["sh", "-c", "npm run migrate && npm run dev:api"]
+      - NODE_ENV=development
+      # Add Kafka connection timeout settings
+      - KAFKA_CONNECTION_TIMEOUT=10000
+      - KAFKA_REQUEST_TIMEOUT=30000
+    # Use the entrypoint script instead of command
+    # The --trace-warnings flag is passed to the entrypoint script
+    command: ["--trace-warnings"]
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -158,9 +164,10 @@ services:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://node-api:5000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - app-network
 

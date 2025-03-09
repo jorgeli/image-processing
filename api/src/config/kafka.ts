@@ -2,6 +2,10 @@ import { Kafka } from 'kafkajs';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Get timeout values from environment or use defaults
+const connectionTimeout = parseInt(process.env.KAFKA_CONNECTION_TIMEOUT ?? '10000', 10);
+const requestTimeout = parseInt(process.env.KAFKA_REQUEST_TIMEOUT ?? '30000', 10);
+
 // Create a more resilient Kafka client
 const kafka = new Kafka({
   clientId: 'image-processor-producer',
@@ -11,7 +15,8 @@ const kafka = new Kafka({
     retries: 15,
     maxRetryTime: 30000
   },
-  connectionTimeout: 10000
+  connectionTimeout,
+  requestTimeout
 });
 
 // Create a single producer instance
