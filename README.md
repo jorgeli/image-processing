@@ -239,7 +239,7 @@ docker-compose logs -f node-api-test
 
 Artillery is installed to test load of the system, this is the testing scenario
 
-![Artillery Load Test Configuration](/image-processing/tests/artillery/testin-config.png)
+![Artillery Load Test Configuration](/tests/artillery/testin-config.png)
 
 #### Running Load Tests
 
@@ -256,7 +256,7 @@ npm run test:load
 npm run test:load:report
 ```
 
-Last report can be seen [here](/image-processing/tests/artillery/report.html)
+Last report can be seen [here](/tests/artillery/report.html)
 
 ## 7 Database Migrations
 
