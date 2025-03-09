@@ -19,6 +19,9 @@ COPY vitest.config.js ./
 # Copy shared packages
 COPY packages/shared-schemas ./packages/shared-schemas/
 
+# Copy test fixtures
+COPY tests/fixtures/images-artillery ./tests/fixtures/images-artillery/
+
 # Install dependencies including vitest
 RUN npm install && npm install -D vitest
 

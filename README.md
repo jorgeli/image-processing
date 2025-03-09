@@ -235,7 +235,28 @@ docker-compose logs -f node-api-test
 - Tests run in the Docker environment for realistic behavior
 - Separate test files for different functional areas
 
-### 6.2 Database Migrations
+### 6.2 Artillery
+
+Artillery is installed to test load of the system, this is the testing scenario
+
+![Artillery Load Test Configuration](/image-processing/tests/artillery/testin-config.png)
+
+#### Running Load Tests
+
+The load tests must be executed inside the `node-api-test` Docker container:
+
+```bash
+# Connect to the node-api-test container
+docker exec -it node-api-test sh
+
+# Inside the container, run the load test
+npm run test:load
+
+# Generate an HTML report of the results
+npm run test:load:report
+```
+
+## 7 Database Migrations
 
 After updating the schema, run:
 
@@ -252,9 +273,9 @@ npx prisma migrate reset --force
 
 ---
 
-## 7. Deployment & Monitoring
+## 8. Deployment & Monitoring
 
-### 7.1 Deployment Sequence
+### 8.1 Deployment Sequence
 
 1. Start **PostgreSQL** and **Kafka** (dependencies first).
 2. Start **MinIO** (storage service).
@@ -262,7 +283,7 @@ npx prisma migrate reset --force
 4. Start **Worker Service** (Node.js-based processing workers).
 5. Start the E2E test with Vitest
 
-### 7.2 Monitoring & Logging
+### 8.2 Monitoring & Logging
 
 - **Logs:**
   ```sh
@@ -278,6 +299,8 @@ Implement retry mechanisms for failed processing jobs.
 Add metrics collection for API usage monitoring.
 
 Integrate authentication (e.g., JWT) for API security.
+
+Implement image caching and CDN integration to improve delivery performance and reduce load on the primary storage.
 
 Expand image processing capabilities beyond simple resizing (e.g., cropping, filtering, watermarking, format conversion).
 

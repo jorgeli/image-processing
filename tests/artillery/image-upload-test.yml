@@ -1,32 +1,22 @@
 config:
-  target: "http://node-api:5000"  # Target your API service
+  target: "http://node-api:5000"
   phases:
-    - duration: 60
-      arrivalRate: 5
-      rampTo: 20
-      name: "Warming up"
-    - duration: 120
-      arrivalRate: 20
-      name: "Sustained load"
-  processor: "./tests/artillery/image-functions.js"
-  plugins:
-    expect: {}
-    metrics-by-endpoint: {}
+    - duration: 20  # Warm-up phase
+      arrivalRate: 5  # Start with 5 per second
+      rampTo: 10  # Ramp up to 10 per second
+      name: "Warm-up phase"
+    - duration: 40  # Ramp-up phase
+      arrivalRate: 10  # Start at 10 per second
+      rampTo: 35  # Ramp up to 35 per second
+      name: "Ramp-up phase"
+    - duration: 90  # Sustained peak load
+      arrivalRate: 35  # Keep at 35 per second
+      name: "Sustained peak phase"
+  processor: "./curl-functions.cjs"
 
 scenarios:
   - name: "Upload random images"
-    beforeScenario: "getRandomImage"
     flow:
-      - post:
-          url: "/api/v1/images/actions/upload"
-          headers:
-            Content-Type: multipart/form-data
-          formData:
-            file:
-              fileName: "{{ imageName }}"
-              path: "{{ imagePath }}"
-            description: "Load test image upload - {{ $randomString(10) }}"
-          expect:
-            - statusCode: 200
-            - contentType: "application/json"
-            - hasProperty: "data.uuid"
+      - function: "uploadWithCurl"
+      - think: 1
+
