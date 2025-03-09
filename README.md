@@ -101,11 +101,11 @@ Ensure you have the following installed:
 
 Even though Docker Compose is not the best tool for production scaling, we can still achieve basic horizontal scaling:
 
-Scaling API and Worker Services
+6. Scaling API and Worker Services
 
 To scale services using Docker Compose, use the --scale option:
 
-# Scale Worker service to 6 instances
+Scale Worker service to 6 instances
 
 ```sh
 docker-compose up --scale image-worker=6
@@ -140,6 +140,7 @@ It is important to also increate partitions so al least match number of workers
 | `/api/v1/images/actions/process`                 | POST   | Start processing an uploaded image |
 | `/api/v1/collections`                            | GET    | List all image collections         |
 | `/api/v1/collections`                            | POST   | Create a new collection            |
+| `/api/v1/collections/:uuid`                      | GET    | Get a collection with its images   |
 | `/api/v1/collections/:uuid`                      | PATCH  | Update a collection                |
 | `/api/v1/collections/:uuid`                      | DELETE | Delete an empty collection         |
 | `/api/v1/collections/:uuid/relationships/images` | POST   | Add images to a collection         |
