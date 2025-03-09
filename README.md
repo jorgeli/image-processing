@@ -1,168 +1,185 @@
 # Image Processing Service
 
-A scalable microservice architecture for image processing with direct and presigned URL uploads, asynchronous processing, and a RESTful API.
+A scalable microservice-based architecture for image processing with direct and presigned URL uploads, asynchronous processing, and a RESTful API.
 
-## Architecture Overview
+## Developed by Jorge Alviarez.
 
-This project implements a modern microservice architecture with:
+## 1. Overview
 
-- **API Service**: Handles HTTP requests, database operations, and coordinates with other services
-- **Worker Service**: Processes images asynchronously, can be scaled horizontally
-- **Shared Schemas**: Common type definitions and validation schemas shared between services
+This service provides an efficient and scalable solution for image processing, designed to handle high loads and be easily extendable. It supports
 
-The system uses:
+- **Direct Uploads** (server-managed file handling)
+- **Presigned URL Uploads** (client-side uploads to storage)
+- **Asynchronous Image Processing** using Kafka message queues
+- **Scalable Worker Nodes** for efficient processing
+- **RESTful API** with OpenAPI/Swagger documentation
+- **Collection Management** for organizing images
 
-- **PostgreSQL**: For persistent data storage
-- **MinIO**: S3-compatible object storage for images
-- **Kafka**: Message queue for asynchronous processing
-- **Docker**: For containerization and local development
+## 2. System Architecture
 
-## Getting Started
+### Components
 
-### Prerequisites
+1. **API Service** (Node.js + Express + Prisma)
 
-- Docker and Docker Compose
-- Git
-- Node.js 20+ (for local development outside containers)
+   - Handles HTTP requests
+   - Manages database operations
+   - Issues presigned URLs for uploads of big files
+   - Sends messages to Kafka for async processing
 
-### Installation
+2. **Worker Service** (Node.js)
+
+   - Listens for messages from Kafka
+   - Processes images
+   - Stores processed images in MinIO
+   - In a productive scenario, Python would typically be the preferred choice for image processing due to its rich ecosystem and specialized libraries. However, for this initial approach, we have chosen to implement the worker service in Node.js to reduce complexity within the mono-repo
+
+3. **Storage** (MinIO - S3 compatible)
+
+   - Stores raw and processed images
+   - Separate buckets for uploads and processed images
+
+4. **Database** (PostgreSQL + Prisma ORM)
+
+   - Stores image metadata and collection info
+
+5. **Message Queue** (Kafka)
+
+   - Handles async image processing requests
+   - Enables horizontal scaling of workers
+
+6. **Containerization** (Docker + Docker Compose)
+
+   - Simplifies deployment and local development
+
+---
+
+## 3. Getting Started
+
+### 3.1 Prerequisites
+
+Ensure you have the following installed:
+
+- [Docker](https://www.docker.com/get-started) and Docker Compose
+- [Git](https://git-scm.com/)
+- [Node.js 20+](https://nodejs.org/) (for local development outside containers)
+
+### 3.2 Installation & Setup
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/your-username/image-processing-service.git
+   ```sh
+   git clone https://github.com/jorgeli/image-processing-service.git
    cd image-processing-service
    ```
 
-2. Start the application:
+2. Start all services using Docker Compose:
 
-   ```bash
+   ```sh
    docker-compose up
    ```
 
-   Or in detached mode with logs:
+   To run in detached mode with logs:
 
-   ```bash
+   ```sh
    docker-compose up -d && docker-compose logs -f --timestamps
    ```
 
-3. The API will be available at http://localhost:5000
+3. Access the system:
 
-### Stopping the Application
+   - **API Service:** [http://localhost:5000](http://localhost:5000)
+   - **Swagger API Docs:** [http://localhost:5000/api-docs/](http://localhost:5000/api-docs/)
+   - **MinIO Console:** [http://localhost:9001](http://localhost:9001) (login with `.env` credentials)
+   - **Kafka UI:** [http://localhost:8080/](http://localhost:8080/)
 
-```bash
-docker-compose down -v
+4. To stop the services:
+
+   ```sh
+   docker-compose down -v
+   ```
+
+5. Scaling with Docker Compose
+
+Even though Docker Compose is not the best tool for production scaling, we can still achieve basic horizontal scaling:
+
+Scaling API and Worker Services
+
+To scale services using Docker Compose, use the --scale option:
+
+# Scale Worker service to 6 instances
+
+```sh
+docker-compose up --scale image-worker=6
 ```
 
-## Testing
+Of course the docker-compose file starts with the number of instances we want.
 
-The tests are designed to run inside the Docker environment to ensure they test the real behavior of the application with all dependencies.
+Kafka allows horizontal scaling by partitioning topics:
+It is important to also increate partitions so al least match number of workers
 
-### Automated Testing
+## 4. API Documentation
 
-Tests run automatically when you start the application with `docker-compose up`. The `node-api-test` service is configured to:
+### Accessing API Documentation
 
-1. Wait for all dependencies to be ready
-2. Run database migrations
-3. Execute tests in watch mode (`npm run test:watch`)
+- **Swagger UI**: Available at http://localhost:5000/api-docs/
 
-You can see the test results in the Docker logs:
+  - Interactive documentation with request/response examples
+  - Try out API endpoints directly from the browser
+  - Complete schema definitions for all models
 
-```bash
-# View test logs
-docker-compose logs -f node-api-test
-```
+- **Postman Collection**: Import the provided `api/Image-Processing-API.postman_collection.json` file into Postman for ready-to-use requests with examples.
 
-## Development Workflow
+### 4.1 Available Endpoints
 
-### Database Migrations
+| Endpoint                                         | Method | Description                        |
+| ------------------------------------------------ | ------ | ---------------------------------- |
+| `/api/v1/images`                                 | GET    | List all images with pagination    |
+| `/api/v1/images/:uuid`                           | GET    | Get image metadata                 |
+| `/api/v1/images/:uuid`                           | DELETE | Delete an image                    |
+| `/api/v1/images/actions/upload-url`              | GET    | Generate a presigned URL           |
+| `/api/v1/images/actions/upload`                  | POST   | Direct upload (server-managed)     |
+| `/api/v1/images/actions/process`                 | POST   | Start processing an uploaded image |
+| `/api/v1/collections`                            | GET    | List all image collections         |
+| `/api/v1/collections`                            | POST   | Create a new collection            |
+| `/api/v1/collections/:uuid`                      | PATCH  | Update a collection                |
+| `/api/v1/collections/:uuid`                      | DELETE | Delete an empty collection         |
+| `/api/v1/collections/:uuid/relationships/images` | POST   | Add images to a collection         |
+| `/api/v1/collections/:uuid/relationships/images` | DELETE | Remove images from a collection    |
 
-After updating the schema, run:
+For complete request/response examples, refer to the Swagger documentation.
 
-```bash
-# Generate Prisma client
-npx prisma generate
+### Collections
 
-# Create a new migration
-npx prisma migrate dev --name migration-name
+The service includes a collection management system that allows users to organize images into logical groups:
 
-# Reset database (caution: destroys all data)
-npx prisma migrate reset --force
-```
+#### Collection Rules
 
-## Technical Documentation
+1. **Empty Collection Rule**: Collections can only be deleted if they contain no images
+2. **Single Collection Rule**: An image can belong to at most one collection at a time
+3. **Existence Rule**: Both the collection and image must exist before establishing a relationship
 
-### Project Structure
+---
 
-```
-├── api/                  # API service
-│   ├── src/
-│   │   ├── config/       # Service initializers
-│   │   ├── controllers/  # Request handlers
-│   │   ├── dtos/         # Data transfer objects
-│   │   ├── middleware/   # Express middleware
-│   │   ├── routes/       # API routes
-│   │   ├── services/     # Business logic
-│   │   ├── app.ts        # Express app setup
-│   │   └── server.ts     # Server entry point
-├── worker/               # Worker service
-│   └── src/              # Similar structure to API
-├── packages/
-│   └── shared-schemas/   # Shared type definitions
-├── prisma/               # Database schema and migrations
-├── tests/                # Test suites
-│   ├── e2e/              # End-to-end tests
-│   ├── api/              # API tests
-│   └── fixtures/         # Test data
-└── docker-compose.yml    # Service definitions
-```
+## 5. Technical Decisions & Trade-offs
 
-### Key Design Decisions
+### 5.1 Why These Technologies?
 
-#### Validation
+- **Node.js (API Service)**: Asynchronous, performant, and widely used for RESTful APIs.
+- **Node.js (Worker Service)**: In a productive scenario, Python would typically be the preferred choice for image processing due to its rich ecosystem and specialized libraries.
 
-- Using Zod for schema validation with TypeScript integration
-- Validation middleware in routes for consistent error handling
+However, for this initial approach, we have chosen to implement the worker service in Node.js to reduce complexity within the mono-repo.
 
-#### Database
+- **Kafka (Message Queue)**: Ensures reliable and scalable async processing.
+- **MinIO (Storage)**: S3-compatible, allowing easy migration to AWS S3.
+- **PostgreSQL (Database)**: SQL database with Prisma ORM for type-safe queries.
 
-- Prisma ORM for type-safe database access for Postgres
-- Singleton pattern for connection management
+### 5.2 Trade-offs & Considerations
 
-#### Storage
+#### Path vs. Path Aliases
 
-- MinIO for S3-compatible object storage
-- Separate buckets for uploaded and processed images
-- Easy to migrate to S3
+- Relative paths (`../../`) are used instead of path aliases due to shared `tsconfig.json` across multiple services.
+- Path aliases (`@shared`) are used inside shared schemas for better modularity.
 
-#### Message Queue
-
-- Kafka for reliable asynchronous processing
-- Multiple partitions to enable horizontal scaling of workers
-- Topics initialized via Docker Compose for security
-
-#### Testing
-
-- E2E tests that verify the complete user journey
-- Tests run in the Docker environment for realistic behavior
-- Separate test files for different functional areas
-
-### Producer / consumer message queue
-
-We are using kafka as a message queue to orchestrate the image processing, in this configuration there is the same number of partitions as the number of workers to scale kafka horizontally. default number of partitions is 4.
-
-### kafka topics and minio bucket initialization
-
-Initialization can be done in initializers, but instead docker compose is used to initialize the topics and the bucket. This makes unnecessary for the api layer to be kafka admin adding security to the system.
-
-### Path vs relative path
-
-We are using relative paths ../../ for the imports instead of path aliases, the reason is that we have 2 different projects that share the same tsconfig.json file, so for example we can't use path aliases for @controllers since each project (api and worker) has its own folder.
-On the other hand, in the shared-schemas project we are using path aliases to import the shared schemas
-
-### Upload Strategies
-
-The service supports two upload strategies:
+#### Upload Strategies
 
 1. **Direct Upload** (via `/api/v1/images/actions/upload`):
 
@@ -178,52 +195,85 @@ The service supports two upload strategies:
    - From client-side the upload to minio is another additional request
    - Better scalability for production environments with S3
 
-For Download, this add extra unnecesary extra complexity so only direct download is supported
+For Download, this add extra unnecesary extra complexity so images are passed via Base64
 
-## API Documentation
+#### Validation
 
-Swagger UI is available at http://localhost:5000/api-docs/
+- Using Zod for schema validation with TypeScript integration
+- Validation middleware in routes for consistent error handling
 
-## Management UIs
+#### Deployment Readiness & Scalability
 
-- **MinIO Console**: http://localhost:9001/ (Login with credentials from .env)
-- **Kafka UI**: http://localhost:8080/
+While Docker Compose is useful for local development and basic scaling, in a real production environment, a more robust orchestration tool like Kubernetes should be used. However, for now:
 
-## Deployment Sequence
+- Scaling with Docker Compose allows basic multi-instance deployments of workers.
+- Kafka partitions enable distributed processing across worker instances.
 
-The application follows this deployment sequence:
+---
 
-1. Database (PostgreSQL) starts and initializes
-2. Message broker (Kafka) and its dependencies start
-3. Storage service (MinIO) initializes with required buckets
-4. API service starts, connecting to all dependencies
-5. Worker services start, consuming messages from Kafka
-6. Testing initiate
+## 6. Testing & Development Workflow
 
-This sequence ensures dependencies are available before services that need them.
+### 6.1 Running Tests
 
-### Logs
+Tests run inside the Docker environment:
 
-View logs for a specific service:
-
-```bash
-docker-compose logs -f --timestamps node-api
+```sh
+# View test logs
+docker-compose logs -f node-api-test
 ```
 
-### Collections
+- It was prefered an approach of E2E test over unit test
+- Tests run in the Docker environment for realistic behavior
+- Separate test files for different functional areas
 
-The service includes a collection management system that allows users to organize images into logical groups:
+### 6.2 Database Migrations
 
-#### Collection Features
+After updating the schema, run:
 
-- **Create Collections**: Users can create named collections with optional descriptions
-- **Update Collections**: Collection names and descriptions can be modified
-- **Delete Collections**: Collections can be deleted, but only if they contain no images
-- **Image Organization**: Each image may belong to zero or one collection at a time
-- **Relationship Management**: Add or remove images from collections via JSON:API style endpoints
+```sh
+npx prisma generate
+npx prisma migrate dev --name migration-name
+```
 
-#### Collection Rules
+For a clean reset:
 
-1. **Empty Collection Rule**: Collections can only be deleted if they contain no images
-2. **Single Collection Rule**: An image can belong to at most one collection at a time
-3. **Existence Rule**: Both the collection and image must exist before establishing a relationship
+```sh
+npx prisma migrate reset --force
+```
+
+---
+
+## 7. Deployment & Monitoring
+
+### 7.1 Deployment Sequence
+
+1. Start **PostgreSQL** and **Kafka** (dependencies first).
+2. Start **MinIO** (storage service).
+3. Start **API Service** (Node.js + Express).
+4. Start **Worker Service** (Node.js-based processing workers).
+5. Start the E2E test with Vitest
+
+### 7.2 Monitoring & Logging
+
+- **Logs:**
+  ```sh
+  docker-compose logs -f --timestamps node-api
+  ```
+
+#### Future Enhancements
+
+Future Enhancements:
+
+Implement retry mechanisms for failed processing jobs.
+
+Add metrics collection for API usage monitoring.
+
+Integrate authentication (e.g., JWT) for API security.
+
+Expand image processing capabilities beyond simple resizing (e.g., cropping, filtering, watermarking, format conversion).
+
+Migrate worker services to Python to leverage its superior image processing libraries.
+
+Enable batch processing to handle multiple images in a single request.
+
+Implement a watcher mechanism to monitor external image repositories and trigger automatic processing for client uploads.

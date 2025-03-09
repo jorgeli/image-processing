@@ -75,7 +75,7 @@ export async function handleCompletion(completion: KafkaCompleteImageDtoType)
     if (completion.success) {
         updateforDB = {
             completedAt: new Date(),
-            status : "completed"
+            status : "succeeded"
         }
     }
     else {

@@ -111,7 +111,7 @@ describe('Image Upload & Processing Flow', () => {
       const response = await fetch(`http://node-api:5000/api/v1/images/${presignedURLData.uuid}`);
       const imageData = await response.json();
       
-      if (imageData.status === 'completed') {
+      if (imageData.status === 'succeeded') {
         isProcessed = true;
         break;
       }

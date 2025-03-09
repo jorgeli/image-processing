@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { GetImagesQueryDtoType, ImageDtoType, PresignedUploadDtoType, DirectUploadDtoType } from "../dtos/image.dto.js";
+import { GetImagesQueryDtoType, ImageDtoType, PresignedUploadDtoType } from "../dtos/image.dto.js";
 import { imageService } from "../services/image.service.js";
 import multer from "multer";
 import { imageUpload, MAX_FILE_SIZE, MIN_FILE_SIZE } from "../utils/upload.js";
@@ -98,22 +98,26 @@ const uploadAndProcessImage = async (req: Request, res: Response): Promise<void>
 };
 
 const handleFileUpload: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
-  imageUpload.single('file')(req, res, (err) => {
+  imageUpload.single('file')(req, res, function handleUploadResult(err) {
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(413).json({ 
+          res.status(413).json({ 
             error: `File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB` 
           });
+          return;
         }
-        return res.status(400).json({ error: err.message });
+        res.status(400).json({ error: err.message });
+        return;
       } else {
-        return res.status(415).json({ error: err.message });
+        res.status(415).json({ error: err.message });
+        return;
       }
     }
     
     if (req.file && req.file.size <= MIN_FILE_SIZE) {
-      return res.status(400).json({ error: "File is empty" });
+      res.status(400).json({ error: "File is empty" });
+      return;
     }
     
     next();

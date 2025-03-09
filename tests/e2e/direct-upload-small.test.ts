@@ -162,7 +162,7 @@ describe('Direct Upload Small Image E2E Flow', () => {
       
       if (response.status === 200) {
         imageData = response.body;
-        if (imageData.status === 'completed') {
+        if (imageData.status === 'succeeded') {
           isProcessed = true;
           console.log(`Image processing completed after ${attempts} attempts`);
           break;
@@ -229,7 +229,7 @@ describe('Direct Upload Small Image E2E Flow', () => {
     expect(getResponse.status).toBe(200);
     expect(getResponse.body).toBeDefined();
     expect(getResponse.body.uuid).toBe(processedId);
-    expect(getResponse.body.status).toBe('completed');
+    expect(getResponse.body.status).toBe('succeeded');
     expect(getResponse.body.imageData).toBeDefined();
     
     console.log(`[${TEST_ID}] Image retrieved successfully by ID`);

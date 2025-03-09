@@ -41,6 +41,27 @@ export const DirectUploadDto = z.object({
   // File validation will be handled by multer middleware
 });
 
+// Response types
+export const ThumbnailImageDto = z.object({
+  uuid: z.string().uuid(),
+  filename: z.string(),
+  description: z.string().nullable(),
+  status: z.string(),
+  createdAt: z.date(),
+  completedAt: z.date().nullable(),
+  imageData: z.string().optional()
+});
+
+export const ImageListResponseDto = z.object({
+  images: z.array(ThumbnailImageDto),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    totalItems: z.number(),
+    totalPages: z.number()
+  })
+});
+
 export type ImageDtoType = z.infer<typeof ImageDto>;
 export type ImageIdDtoType = z.infer<typeof ImageIdDto>;
 export type PresignedUploadDtoType = z.infer<typeof PresignedUploadDto>;
@@ -48,3 +69,5 @@ export type PresignedUrlResponseDtoType = z.infer<typeof PresignedUrlResponseDto
 export type ImageUpdateDtoType = z.infer<typeof ImageUpdateDto>;
 export type GetImagesQueryDtoType = z.infer<typeof GetImagesQueryDto>;
 export type DirectUploadDtoType = z.infer<typeof DirectUploadDto>;
+export type ThumbnailImageDtoType = z.infer<typeof ThumbnailImageDto>;
+export type ImageListResponseDtoType = z.infer<typeof ImageListResponseDto>;

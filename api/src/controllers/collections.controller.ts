@@ -86,7 +86,7 @@ export const deleteCollection = async (req: Request, res: Response): Promise<voi
     const collection = await collectionService.getCollectionById(uuid);
     
 
-    if (collection?._count?.images && collection._count.images > 0) {
+    if (collection?.imageCount && collection.imageCount > 0) {
       res.status(409).json({ 
         errors: [{ 
           title: "Cannot delete non-empty collection", 

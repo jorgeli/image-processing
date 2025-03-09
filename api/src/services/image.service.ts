@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { minio } from "../config/minio.js";
 import { prisma } from "../config/prisma.js";
-import { GetImagesQueryDtoType, ImageDtoType, ImageIdDtoType, PresignedUploadDtoType, PresignedUrlResponseDtoType } from "../dtos/image.dto.js";
+import { GetImagesQueryDtoType, ImageDtoType, PresignedUploadDtoType, PresignedUrlResponseDtoType } from "../dtos/image.dto.js";
 import { sendJobToKafka } from "./kafka.service.js";
 import dotenv from "dotenv";
 import { ThumbnailImage } from '@prisma/client';
@@ -21,7 +21,7 @@ export const imageService = {
     
     const images = await prisma.thumbnailImage.findMany({
       where: {
-        status: "completed",
+        status: "succeeded",
         ...(params.search ? {
           OR: [
             { filename: { contains: params.search, mode: 'insensitive' } },
@@ -39,7 +39,7 @@ export const imageService = {
     // For completed images, fetch the actual image data
     const imagesWithData = await Promise.all(
       images.map(async (image) => {
-        if (image.status === "completed") {
+        if (image.status === "succeeded") {
           try {
             // Get the image data directly from MinIO
             const dataStream = await minio.client.getObject(
@@ -124,7 +124,7 @@ export const imageService = {
       return null;
     }
     
-    if (dbimage.status === "completed") {
+    if (dbimage.status === "succeeded") {
       try {
         // Get the image data directly from MinIO
         const dataStream = await minio.client.getObject(

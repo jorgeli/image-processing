@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 const apiUrl = 'http://node-api:5000/api/health';
-const maxRetries = 30;
+const maxRetries = 120;
 const retryInterval = 1000; // 1 second
 
 async function waitForApi() {
