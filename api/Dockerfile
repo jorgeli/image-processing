@@ -15,7 +15,10 @@ COPY package*.json ./
 COPY tsconfig.json ./
 COPY prisma ./prisma/
 
-# Copy shared packages
+# ✅ Copy your actual source code (this was missing)
+COPY api/src ./api/src
+
+# ✅ Copy shared packages (if needed)
 COPY packages/shared-schemas ./packages/shared-schemas/
 
 # Pre-install dependencies to speed up container startup
