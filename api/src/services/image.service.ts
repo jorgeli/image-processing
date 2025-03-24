@@ -75,6 +75,18 @@ export const imageService = {
 
   createProcessingTask: async (imageData: ImageDtoType) => {
     try {
+      // Check if the image was uploaded to minio
+      try {
+        await minio.client.statObject(minio.uploadBucketName, imageData.uuid);
+      }catch (statError: any) {
+        if (statError.code === "NotFound") {
+          const error = new Error("Image not found in MinIO");
+          error.name = "ImageNotFoundError";
+          throw error;
+        }
+        throw statError;
+      }
+      
       // Send to Kafka first
       await sendJobToKafka(imageData);
       

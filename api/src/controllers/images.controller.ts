@@ -12,6 +12,14 @@ const processImage = async (req: Request, res: Response): Promise<void> => {
     await imageService.createProcessingTask(req.body as ImageDtoType);
     res.status(200).json({ message: "Processing started" });
   } catch (err) {
+    if (err instanceof Error)
+    {
+      if (err.name == "ImageNotFoundError")
+        res.status(404).json({
+      status: "error",
+      message: "Image not found in storage, please upload before process"
+        })
+    }
     console.error('Failed to process image:', err);
     res.status(500).json({ message: "Internal server error" });
   }
